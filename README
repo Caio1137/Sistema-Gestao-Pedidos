@@ -1,0 +1,102 @@
+Rodar
+No PowerShell:
+
+$env:JAVA_HOME = 'C:\Program Files\Java\jdk-17'
+$env:Path = "$env:JAVA_HOME\bin;$env:Path"
+.\mvnw.cmd spring-boot:run
+
+REM =========================
+REM CLIENTES
+REM =========================
+
+REM POST /clientes
+REM Vai criar o cliente 1 com dois enderecos: ids 1 e 2
+curl -s -X POST http://localhost:8080/clientes -H "Content-Type: application/json" -d "{\"nome\":\"Joao Silva\",\"email\":\"joao@email.com\",\"enderecos\":[{\"rua\":\"Rua das Flores, 100\",\"cidade\":\"Sao Paulo\",\"cep\":\"01000-000\"},{\"rua\":\"Av. Paulista, 2000\",\"cidade\":\"Sao Paulo\",\"cep\":\"01310-200\"}]}"
+
+REM GET /clientes
+curl -s http://localhost:8080/clientes
+
+REM GET /clientes/1
+curl -s http://localhost:8080/clientes/1
+
+REM PUT /clientes/1
+REM Atualiza nome, email e enderecos existentes informando o id de cada endereco
+curl -s -X PUT http://localhost:8080/clientes/1 -H "Content-Type: application/json" -d "{\"nome\":\"Joao Silva Atualizado\",\"email\":\"joao.silva@email.com\",\"enderecos\":[{\"id\":1,\"rua\":\"Rua das Flores, 150\",\"cidade\":\"Sao Paulo\",\"cep\":\"01000-010\"},{\"id\":2,\"rua\":\"Av. Paulista, 2100\",\"cidade\":\"Sao Paulo\",\"cep\":\"01310-210\"},{\"rua\":\"Rua Nova, 50\",\"cidade\":\"Santos\",\"cep\":\"11000-000\"}]}"
+
+REM =========================
+REM PRODUTOS
+REM =========================
+
+REM POST /produtos
+REM Produto 1
+curl -s -X POST http://localhost:8080/produtos -H "Content-Type: application/json" -d "{\"nome\":\"Notebook\",\"preco\":3500.00,\"estoque\":10}"
+
+REM POST /produtos
+REM Produto 2
+curl -s -X POST http://localhost:8080/produtos -H "Content-Type: application/json" -d "{\"nome\":\"Mouse Gamer\",\"preco\":120.00,\"estoque\":20}"
+
+REM GET /produtos
+curl -s http://localhost:8080/produtos
+
+REM GET /produtos/1
+curl -s http://localhost:8080/produtos/1
+
+REM PUT /produtos/2
+curl -s -X PUT http://localhost:8080/produtos/2 -H "Content-Type: application/json" -d "{\"nome\":\"Mouse Gamer RGB\",\"preco\":150.00,\"estoque\":25}"
+
+REM POST /produtos
+REM Produto 3, so para testar DELETE depois
+curl -s -X POST http://localhost:8080/produtos -H "Content-Type: application/json" -d "{\"nome\":\"Teclado Simples\",\"preco\":80.00,\"estoque\":5}"
+
+REM DELETE /produtos/3
+REM Esperado: HTTP 204
+curl -i -s -X DELETE http://localhost:8080/produtos/3
+
+REM =========================
+REM PEDIDOS
+REM =========================
+
+REM POST /pedidos
+REM Pedido 1 usando cliente 1, endereco 1, produto 1 e produto 2
+curl -s -X POST http://localhost:8080/pedidos -H "Content-Type: application/json" -d "{\"clienteId\":1,\"enderecoId\":1,\"itens\":[{\"produtoId\":1,\"quantidade\":1},{\"produtoId\":2,\"quantidade\":2}]}"
+
+REM GET /pedidos
+curl -s http://localhost:8080/pedidos
+
+REM GET /pedidos/1
+curl -s http://localhost:8080/pedidos/1
+
+REM PATCH /pedidos/1/status
+REM CRIADO -> PAGO
+curl -s -X PATCH http://localhost:8080/pedidos/1/status -H "Content-Type: application/json" -d "{\"status\":\"PAGO\"}"
+
+REM PATCH /pedidos/1/status
+REM PAGO -> ENVIADO
+curl -s -X PATCH http://localhost:8080/pedidos/1/status -H "Content-Type: application/json" -d "{\"status\":\"ENVIADO\"}"
+
+REM POST /pedidos
+REM Pedido 2 so para testar o cancelamento via DELETE
+curl -s -X POST http://localhost:8080/pedidos -H "Content-Type: application/json" -d "{\"clienteId\":1,\"enderecoId\":2,\"itens\":[{\"produtoId\":1,\"quantidade\":1}]}"
+
+REM DELETE /pedidos/2
+REM Isso cancela o pedido; esperado: HTTP 204
+curl -i -s -X DELETE http://localhost:8080/pedidos/2
+
+REM =========================
+REM DELETE DE CLIENTE
+REM =========================
+
+REM POST /clientes
+REM Cliente 2, so para testar DELETE
+curl -s -X POST http://localhost:8080/clientes -H "Content-Type: application/json" -d "{\"nome\":\"Maria Souza\",\"email\":\"maria@email.com\",\"enderecos\":[{\"rua\":\"Rua B, 50\",\"cidade\":\"Campinas\",\"cep\":\"13000-000\"}]}"
+
+REM DELETE /clientes/2
+REM Esperado: HTTP 204
+curl -i -s -X DELETE http://localhost:8080/clientes/2
+
+Observacoes rapidas:
+
+DELETE /pedidos/{id} faz cancelamento logico, nao exclusao fisica.
+O total do pedido e calculado internamente com base nos itens.
+O estoque agora e protegido contra concorrencia durante a criacao do pedido.
+Se um endereco ja foi usado em pedido e voce quiser mantelo no PUT do cliente, envie o id dele no payload.
